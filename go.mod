@@ -26,7 +26,9 @@ require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
 	github.com/decred/dcrd/lru v1.0.0 // indirect
 	github.com/dlclark/regexp2 v1.10.0 // indirect
+	github.com/extism/go-sdk v1.0.3 // indirect
 	github.com/go-errors/errors v1.0.1 // indirect
+	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/kkdai/bstream v1.0.0 // indirect
@@ -45,6 +47,7 @@ require (
 	github.com/rs/cors v1.9.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sashabaranov/go-openai v1.14.0 // indirect
+	github.com/tetratelabs/wazero v1.3.0 // indirect
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f // indirect
 	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
