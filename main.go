@@ -49,8 +49,14 @@ func FetchURLContentHandler(w http.ResponseWriter, r *http.Request) {
 				Url: "https://github.com/OpenAgentsInc/plugin-url-scraper-go/raw/main/host-functions.wasm",
 			},
 		},
+		AllowedHosts: []string{"*"},
 	}
-	plugin, err := extism.NewPlugin(ctx, manifest, extism.PluginConfig{}, []extism.HostFunction{})
+
+	config := extism.PluginConfig{
+		EnableWasi: true, // Enable WASI
+	}
+	plugin, err := extism.NewPlugin(ctx, manifest, config, []extism.HostFunction{})
+
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to initialize plugin: %v", err), http.StatusInternalServerError)
 		return
