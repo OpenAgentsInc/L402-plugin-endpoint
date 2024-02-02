@@ -2,7 +2,6 @@ package main
 
 import (
     "context"
-    "fmt"
     "log"
     "net/http"
     "os"
@@ -12,6 +11,7 @@ import (
     "github.com/gorilla/mux"
     "github.com/joho/godotenv"
     "github.com/kodylow/matador/pkg/auth"
+    "github.com/kodylow/matador/pkg/models"
     "github.com/kodylow/matador/pkg/database"
     "github.com/rs/cors"
 )
@@ -68,7 +68,7 @@ func FetchURLContentHandler(w http.ResponseWriter, r *http.Request) {
     }
 
     // L402 Payment Check
-    reqInfo := auth.RequestInfo{Path: r.URL.Path}
+    reqInfo := request.RequestInfo{Path: r.URL.Path}
     if err := auth.CheckAuthorizationHeader(reqInfo); err != nil {
         log.Println("Unauthorized, payment required")
         l402, err := auth.GetL402(globalPrice, reqInfo)
