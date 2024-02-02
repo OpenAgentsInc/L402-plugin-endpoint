@@ -27,6 +27,43 @@ var LnAddr LnAddressResponse
 
 // GetCallback gets the callback from the lightning address
 func GetCallback(lnAddress string) (LnAddressResponse, error) {
+	log.Printf("Starting GetCallback with lnAddress: %s", lnAddress)
+	parts := strings.Split(lnAddress, "@")
+	if len(parts) != 2 {
+		log.Printf("Invalid LN address format: %s", lnAddress)
+		return LnAddressResponse{}, fmt.Errorf("invalid lnAddress: %s", lnAddress)
+	}
+	username, domain := parts[0], parts[1]
+	url := fmt.Sprintf("https://%s/.well-known/lnurlp/%s", domain, username)
+	log.Printf("Constructed URL for LN address callback: %s", url)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		log.Printf("HTTP request to LN address callback URL failed: %v", err)
+		return LnAddressResponse{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		log.Printf("Non-200 response from LN address callback URL: %d", resp.StatusCode)
+		bodyBytes, _ := io.ReadAll(resp.Body) // Read the body for logging
+		log.Printf("Response body: %s", string(bodyBytes))
+		return LnAddressResponse{}, fmt.Errorf("invalid lnAddress: %s", lnAddress)
+	}
+
+	var lnAddrResp LnAddressResponse
+	err = json.NewDecoder(resp.Body).Decode(&lnAddrResp)
+	if err != nil {
+		log.Printf("Error decoding callback response: %v", err)
+		return LnAddressResponse{}, err
+	}
+
+	log.Printf("Successfully decoded LN address response: %+v", lnAddrResp)
+	return lnAddrResp, nil
+}
+
+// GetCallback gets the callback from the lightning address
+func OldGetCallback(lnAddress string) (LnAddressResponse, error) {
 	parts := strings.Split(lnAddress, "@")
 	if len(parts) != 2 {
 		return LnAddressResponse{}, fmt.Errorf("invalid lnAddress: %s", lnAddress)

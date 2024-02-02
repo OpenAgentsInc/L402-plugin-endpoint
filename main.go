@@ -19,10 +19,8 @@ import (
 var globalPrice uint64
 
 func init() {
-    // Load .env variables
-    if err := godotenv.Load(".env"); err != nil {
-        log.Fatal("Error loading .env file: ", err)
-    }
+    // Attempt to load .env variables without failing if .env file is not present
+    _ = godotenv.Load(".env") // Ignore error as .env may not exist in production
 
     // Initialize global settings
     var err error
