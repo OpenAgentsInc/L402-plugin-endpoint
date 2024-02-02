@@ -81,6 +81,12 @@ func CheckAuthorizationHeader(reqInfo models.RequestInfo) error {
 func GetL402(price uint64, reqInfo models.RequestInfo) (string, error) {
     var msats uint64 = price*1000 // 5000 sats
 
+    var err error
+    service.LnAddr, err = service.GetCallback("openagents@getalby.com")
+	if err != nil {
+		return "", fmt.Errorf("error getting lnaddress callback: %w", err)
+	}
+
 	invoice, err := service.GetInvoice(msats)
 	if err != nil {
 		log.Println("Error getting invoice:", err)
