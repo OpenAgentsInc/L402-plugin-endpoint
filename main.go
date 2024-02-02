@@ -2,10 +2,12 @@ package main
 
 import (
     "context"
+    "io/ioutil"
     "log"
     "net/http"
     "os"
     "strconv"
+    "bytes"
 
     "github.com/extism/go-sdk"
     "github.com/gorilla/mux"
@@ -66,7 +68,23 @@ func FetchURLContentHandler(w http.ResponseWriter, r *http.Request) {
     }
 
     // L402 Payment Check
-    reqInfo := request.RequestInfo{Path: r.URL.Path}
+       body, err := ioutil.ReadAll(r.Body)
+    if err != nil {
+        log.Println("Error reading body:", err)
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    // Ensure the body can be read again if necessary
+    r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+
+    // Properly create a RequestInfo instance with all necessary data
+    reqInfo := request.RequestInfo{
+        AuthHeader: r.Header.Get("Authorization"),
+        Method:     r.Method,
+        Path:       r.URL.Path,
+        Body:       body,
+    }
+
     if err := auth.CheckAuthorizationHeader(reqInfo); err != nil {
         log.Println("Unauthorized, payment required")
         l402, err := auth.GetL402(globalPrice, reqInfo)
