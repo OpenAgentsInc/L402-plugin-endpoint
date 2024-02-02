@@ -1,20 +1,18 @@
 package main
 
 import (
+	"context"
+	"fmt"
+	"github.com/extism/go-sdk"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"os"
-
-	"github.com/gorilla/mux"
-	"github.com/joho/godotenv"
 )
 
 func init() {
-	// Load environment variables from .env file
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatal("Error loading .env file: ", err)
-	}
+	// Load environment variables from .env file, if present
+	_ = os.Getenv(".env")
 }
 
 func main() {
@@ -25,19 +23,17 @@ func main() {
 
 	// Set up HTTP server
 	http.Handle("/", router)
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080" // Default port if not specified
+	port := "8080" // Default port
+	if customPort := os.Getenv("PORT"); customPort != "" {
+		port = customPort
 	}
+
 	log.Printf("Server starting on port %s", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
-// FetchURLContentHandler handles requests to fetch content from a URL after payment verification
+// FetchURLContentHandler handles requests to fetch content from a URL
 func FetchURLContentHandler(w http.ResponseWriter, r *http.Request) {
-	// Placeholder for payment verification logic
-	// Verify payment here...
-
 	// Read URL from query parameter
 	url := r.URL.Query().Get("url")
 	if url == "" {
@@ -45,26 +41,31 @@ func FetchURLContentHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Log the URL to the console
-	log.Printf("Fetching content from URL: %s", url)
-
-	// Assuming payment is verified and URL parameter is present
-	// Placeholder for executing the Extism plugin with the URL
-	output, err := executeExtismPluginWithURL(url) // You need to implement this function
+	// Initialize the Extism plugin
+	ctx := context.Background()
+	manifest := extism.Manifest{
+		Wasm: []extism.Wasm{
+			extism.WasmUrl{
+				Url: "https://github.com/OpenAgentsInc/plugin-url-scraper-go/raw/main/host-functions.wasm",
+			},
+		},
+	}
+	plugin, err := extism.NewPlugin(ctx, manifest, extism.PluginConfig{}, []extism.HostFunction{})
 	if err != nil {
-		http.Error(w, "Failed to fetch URL content: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to initialize plugin: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Call the "fetch_url_content" function on the plugin
+	exit, out, err := plugin.Call("fetch_url_content", []byte(url))
+	if err != nil || exit != 0 {
+		http.Error(w, fmt.Sprintf("Plugin call failed: %v", err), http.StatusInternalServerError)
 		return
 	}
 
 	// Return the fetched content
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(output))
+	w.Write(out)
 }
 
-// Placeholder for the function to execute the Extism plugin with a given URL
-// You need to replace this with actual implementation
-func executeExtismPluginWithURL(url string) (string, error) {
-	// Implement the logic to execute the Extism plugin and return the content or an error
-	return "", nil // Placeholder return
-}
 
