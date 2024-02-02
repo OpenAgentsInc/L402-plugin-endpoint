@@ -7,57 +7,64 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
-	"github.com/kodylow/matador/pkg/auth"
-	"github.com/kodylow/matador/pkg/database"
-	"github.com/kodylow/matador/pkg/handler"
-	"github.com/rs/cors"
 )
 
 func init() {
-	// read in .env
+	// Load environment variables from .env file
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatal("Error loading .env file: ", err)
 	}
-
-	err = handler.Init(os.Getenv("PRICE_SATS"), os.Getenv("API_ROOT"), os.Getenv("LN_ADDRESS"))
-	if err != nil {
-		log.Fatal("Error initializing environment variables for handlers: ", err)
-	}
-
-	err = database.InitDatabase()
-	if err != nil {
-		log.Fatal("Error initializing database: ", err)
-	}
-
-	// Initialize the secret
-	err = auth.InitSecret() // read the secret from the RUNE_SECRET environment variable
-	if err != nil {
-		log.Fatal("Error initializing secret for server side tokens/runes: ", err)
-	}
 }
-
 
 func main() {
 	router := mux.NewRouter()
 
-	//router.HandleFunc("/", handler.PassthroughHandler)
+	// Define route for fetching URL content
+	router.HandleFunc("/fetch-url-content", FetchURLContentHandler).Methods("GET")
 
-    // All routes
-    router.PathPrefix("/").HandlerFunc(handler.PassthroughHandler)
-    http.Handle("/", router)
-
-	// setup CORS
-	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"}, // change this to the domains you want to al
-		AllowedMethods:   []string{"GET", "POST", "OPTIONS", "PUT", "DELETE"},
-		AllowedHeaders:   []string{"*"}, // change this to the headers you want to allow
-		ExposedHeaders:   []string{"*"}, // change this to the headers you want to expose
-		AllowCredentials: true,
-	})
-
-	handler := c.Handler(router)
-
-	log.Println("Gorilla CORS Server starting on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", handler))
+	// Set up HTTP server
+	http.Handle("/", router)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080" // Default port if not specified
+	}
+	log.Printf("Server starting on port %s", port)
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
+
+// FetchURLContentHandler handles requests to fetch content from a URL after payment verification
+func FetchURLContentHandler(w http.ResponseWriter, r *http.Request) {
+	// Placeholder for payment verification logic
+	// Verify payment here...
+
+	// Read URL from query parameter
+	url := r.URL.Query().Get("url")
+	if url == "" {
+		http.Error(w, "URL parameter is required", http.StatusBadRequest)
+		return
+	}
+
+	// Log the URL to the console
+	log.Printf("Fetching content from URL: %s", url)
+
+	// Assuming payment is verified and URL parameter is present
+	// Placeholder for executing the Extism plugin with the URL
+	output, err := executeExtismPluginWithURL(url) // You need to implement this function
+	if err != nil {
+		http.Error(w, "Failed to fetch URL content: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Return the fetched content
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(output))
+}
+
+// Placeholder for the function to execute the Extism plugin with a given URL
+// You need to replace this with actual implementation
+func executeExtismPluginWithURL(url string) (string, error) {
+	// Implement the logic to execute the Extism plugin and return the content or an error
+	return "", nil // Placeholder return
+}
+
